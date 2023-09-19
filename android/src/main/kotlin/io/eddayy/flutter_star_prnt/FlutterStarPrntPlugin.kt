@@ -20,6 +20,8 @@ import com.starmicronics.starioextension.IConnectionCallback
 import com.starmicronics.starioextension.StarIoExt
 import com.starmicronics.starioextension.StarIoExt.Emulation
 import com.starmicronics.starioextension.StarIoExtManager
+import com.starmicronics.starioextension.StarIoExtManager.*
+import com.starmicronics.starioextension.StarIoExtManagerListener
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
@@ -34,7 +36,7 @@ import android.webkit.URLUtil
 
 /** FlutterStarPrntPlugin */
 public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
-  protected var starIoExtManager: StarIoExtManager? = null
+  lateinit var starIoExtManager: StarIoExtManager
   companion object {
     protected lateinit var applicationContext: Context
 
@@ -80,6 +82,12 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
         }
         "print" -> {
           print(call, result)
+        }
+        "connect" -> {
+          connect(call, result)
+        }
+        "executeScan" -> {
+          executeScan(call, result)
         }
         else -> result.notImplemented()
       }
@@ -140,7 +148,7 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
     try {
       val portSettings: String? = getPortSettingsOption(emulation)
 
-      port = StarIOPort.getPort(portName, portSettings, 10000, applicationContext)
+      port = StarIOPort.getPort(portName, emulation, 10000, applicationContext)
 
       // A sleep is used to get time for the socket to completely open
       try {
@@ -177,6 +185,66 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
       }
     }
   }
+
+  public fun executeScan(@NonNull call: MethodCall, @NonNull result: Result){
+    val portName: String = call.argument<String>("portName") as String
+    val emulation: String = call.argument<String>("emulation") as String
+    val portSettings: String? = getPortSettingsOption(emulation)
+
+        var barcodeString = ""
+    try {
+      // val portSettings = ""
+
+      Thread{
+        starIoExtManager = StarIoExtManager(Type.OnlyBarcodeReader, portName, portSettings, 3000, applicationContext)
+
+
+
+
+        if (starIoExtManager != null){
+
+          
+
+          starIoExtManager.setListener(object: StarIoExtManagerListener() {
+                    override fun onBarcodeDataReceive(barcodeData: ByteArray) {
+                        // val barcodeDataArray  = barcodeData.split("\n")
+
+
+                        // for (codeData in barcodeDataArray){
+                        //   Log.i("FlutterStarPrntBarcode", codeData)
+                        // }
+
+                        barcodeString = barcodeData as String
+                    }
+                })
+
+          // starIoExtManager.connect(object: ConnectionCallback(){
+          //   override fun onConnected(result: Boolean, resultCode: Int) {
+          //               if (!result) {
+          //                   val message = if (resultCode == -100) "バーコードリーダーが使用中になっています。" else "バーコードリーダーを確認できません。"
+          //                   Log.d("ERROR", "バーコード接続エラー: $message")
+          //               }
+          //           }
+
+          //           override fun onDisconnected() {
+          //               Log.d("INFO", "バーコードの接続を解除しました。")
+          //           }
+          // })
+        }
+
+
+      }
+
+
+
+      result.success(barcodeString)
+    }
+    catch(e: Exception) {
+      result.error("SCANNER_ERROR", e.message, null)
+    }
+
+  }
+
   // cant run this on main thread, check this later
   public fun connect(@NonNull call: MethodCall, @NonNull result: Result) {
     val portName: String = call.argument<String>("portName") as String
@@ -187,6 +255,7 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
     try {
       var starIoExtManager = this.starIoExtManager
 
+      Thread{
       if (starIoExtManager?.port != null) {
         starIoExtManager.disconnect(object : IConnectionCallback {
           public override fun onConnected(connectResult: IConnectionCallback.ConnectResult) {
@@ -225,6 +294,8 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
                   // Do nothing
                 }
               })
+
+      }
     } catch (e: Exception) {
       result.error("CONNECT_ERROR", e.message, e)
     }

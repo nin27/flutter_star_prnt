@@ -82,16 +82,28 @@ class StarPrnt {
     return result;
   }
 
-  // static Future<dynamic> connect({
-  //   required String portName,
-  //   required String emulation,
-  //   bool hasBarcodeReader = false,
-  // }) async {
-  //   dynamic result = await _channel.invokeMethod('connect', {
-  //     'portName': portName,
-  //     'emulation': emulation,
-  //     'hasBarcodeReader': hasBarcodeReader,
-  //   });
-  //   return result;
-  // }
+  static Future<dynamic> connect({
+    required String portName,
+    required String emulation,
+    bool hasBarcodeReader = false,
+  }) async {
+    dynamic result = await _channel.invokeMethod('connect', {
+      'portName': portName,
+      'emulation': emulation,
+      'hasBarcodeReader': hasBarcodeReader,
+    });
+    return result;
+  }
+
+  static Future<dynamic> executeScan({
+    required String portName,
+    required String emulation,
+    // bool hasBarcodeReader = false,
+  }) async {
+    dynamic result = await _channel.invokeMethod('executeScan', {
+      'portName': portName,
+      'emulation': emulation
+    });
+    return result;
+  }
 }
