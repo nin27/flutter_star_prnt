@@ -90,6 +90,10 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
         "executeScan" -> {
           executeScan(call, result)
         }
+          "startBuzzer" -> {
+              startBuzzer(call, result)
+          }
+
         else -> result.notImplemented()
       }
     }
@@ -186,6 +190,8 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
       }
     }
   }
+
+
 
   public fun executeScan(@NonNull call: MethodCall, @NonNull result: Result){
     val portName: String = call.argument<String>("portName") as String
@@ -608,6 +614,24 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
         }}
     }
   }
+
+    public fun startBuzzer(@NonNull call: MethodCall, @NonNull result: Result) {
+        val portName: String = call.argument<String>("portName") as String
+        val emulation: String = call.argument<String>("emulation") as String
+        val builder = StarIoExt.createCommandBuilder(getEmulation(emulation))
+        builder.beginDocument()
+        builder.appendPeripheral(ICommandBuilder.PeripheralChannel.No1)
+        builder.endDocument()
+        println("Buzzer called")
+//        result.success()
+        sendCommand(
+            portName,
+            getPortSettingsOption(emulation),
+            builder.commands,
+            applicationContext,
+            result)
+        return
+    }
 
   private fun getEncoding(encoding: String): Charset {
     if (encoding.equals("US-ASCII")) return Charset.forName("US-ASCII") // English
