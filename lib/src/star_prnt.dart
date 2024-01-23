@@ -106,17 +106,4 @@ class StarPrnt {
     });
     return result;
   }
-
-  static Future<dynamic> startBuzzer({
-    required String portName,
-    required String emulation,
-    // bool hasBarcodeReader = false,
-  }) async {
-    dynamic result = await _channel.invokeMethod('startBuzzer', {
-      'portName': portName,
-      'emulation': emulation
-    });
-    return result;
-  }
-  
 }

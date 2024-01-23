@@ -36,7 +36,6 @@ import android.webkit.URLUtil
 
 /** FlutterStarPrntPlugin */
 public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
-  // var starIoExtManager: StarIoExtManager
   lateinit var starIoExtManager: StarIoExtManager
   companion object {
     protected lateinit var applicationContext: Context
@@ -211,6 +210,7 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
         if (starIoExtManager != null){
 
           
+
           starIoExtManager.setListener(object: StarIoExtManagerListener() {
                     override fun onBarcodeDataReceive(barcodeData: ByteArray) {
                         // val barcodeDataArray  = barcodeData.split("\n")
