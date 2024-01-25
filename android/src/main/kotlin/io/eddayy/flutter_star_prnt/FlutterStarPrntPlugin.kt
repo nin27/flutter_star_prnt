@@ -89,9 +89,9 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
         "executeScan" -> {
           executeScan(call, result)
         }
-          "startBuzzer" -> {
-              startBuzzer(call, result)
-          }
+        "callBuzzer" -> {
+            callBuzzer(call, result)
+        }
 
         else -> result.notImplemented()
       }
@@ -189,8 +189,6 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
       }
     }
   }
-
-
 
   public fun executeScan(@NonNull call: MethodCall, @NonNull result: Result){
     val portName: String = call.argument<String>("portName") as String
@@ -456,8 +454,11 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
           builder.appendFontStyle((getFontStyle(it.get("appendFontStyle") as String)))
       else if (it.containsKey("appendCutPaper"))
           builder.appendCutPaper(getCutPaperAction(it.get("appendCutPaper").toString()))
-      else if (it.containsKey("openCashDrawer"))
-          builder.appendPeripheral(getPeripheralChannel(it.get("openCashDrawer") as Int))
+      else if (it.containsKey("startBuzzer")){
+          println("CALL BUZZER")
+          builder.appendPeripheral(getPeripheralChannel(it.get("startBuzzer").toString()))
+      }else if (it.containsKey("openCashDrawer"))
+          builder.appendPeripheral(getPeripheralChannel(it.get("openCashDrawer").toString()))
       else if (it.containsKey("appendBlackMark"))
           builder.appendBlackMark(getBlackMarkType(it.get("appendBlackMark").toString()))
       else if (it.containsKey("appendBytes"))
@@ -615,24 +616,6 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
     }
   }
 
-    public fun startBuzzer(@NonNull call: MethodCall, @NonNull result: Result) {
-        val portName: String = call.argument<String>("portName") as String
-        val emulation: String = call.argument<String>("emulation") as String
-        val builder = StarIoExt.createCommandBuilder(getEmulation(emulation))
-        builder.beginDocument()
-        builder.appendPeripheral(ICommandBuilder.PeripheralChannel.No1)
-        builder.endDocument()
-        println("Buzzer called")
-//        result.success()
-        sendCommand(
-            portName,
-            getPortSettingsOption(emulation),
-            builder.commands,
-            applicationContext,
-            result)
-        return
-    }
-
   private fun getEncoding(encoding: String): Charset {
     if (encoding.equals("US-ASCII")) return Charset.forName("US-ASCII") // English
     else if (encoding.equals("Windows-1252")) {
@@ -745,11 +728,17 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
     else if (cutPaperAction.equals("PartialCutWithFeed")) return CutPaperAction.PartialCutWithFeed
     else return CutPaperAction.PartialCutWithFeed
   }
-  private fun getPeripheralChannel(peripheralChannel: Int): ICommandBuilder.PeripheralChannel {
-    if (peripheralChannel == 1) return ICommandBuilder.PeripheralChannel.No1
-    else if (peripheralChannel == 2) return ICommandBuilder.PeripheralChannel.No2
-    else return ICommandBuilder.PeripheralChannel.No1
-  }
+//  private fun getPeripheralChannel(peripheralChannel: Int): ICommandBuilder.PeripheralChannel {
+//    if (peripheralChannel == 1) return ICommandBuilder.PeripheralChannel.No1
+//    else if (peripheralChannel == 2) return ICommandBuilder.PeripheralChannel.No2
+//    else return ICommandBuilder.PeripheralChannel.No1
+//  }
+
+    private fun getPeripheralChannel(peripheralChannel: String): ICommandBuilder.PeripheralChannel {
+        if (peripheralChannel.equals("No1")) return ICommandBuilder.PeripheralChannel.No1
+        else if (peripheralChannel.equals("No2")) return ICommandBuilder.PeripheralChannel.No2
+        else return ICommandBuilder.PeripheralChannel.No1
+    }
   private fun getBlackMarkType(blackMarkType: String): ICommandBuilder.BlackMarkType {
     if (blackMarkType.equals("Valid")) return ICommandBuilder.BlackMarkType.Valid
     else if (blackMarkType.equals("Invalid")) return ICommandBuilder.BlackMarkType.Invalid
@@ -841,6 +830,25 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
     staticLayout.draw(canvas)
     return bitmap
   }
+
+    public fun callBuzzer(@NonNull call: MethodCall, @NonNull result: Result) {
+        val portName: String = call.argument<String>("portName") as String
+        val emulation: String = call.argument<String>("emulation") as String
+        val builder = StarIoExt.createCommandBuilder(getEmulation(emulation))
+        builder.beginDocument()
+        builder.appendPeripheral(ICommandBuilder.PeripheralChannel.No1)
+        builder.endDocument()
+        println("Buzzer called")
+//        result.success()
+        sendCommand(
+            portName,
+            getPortSettingsOption(emulation),
+            builder.commands,
+            applicationContext,
+            result)
+        return
+    }
+
   private fun sendCommand(
       portName: String,
       portSettings: String,

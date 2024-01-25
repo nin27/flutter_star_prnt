@@ -297,6 +297,19 @@ extension ExtendedStarBarcodeWidth on StarBarcodeWidth {
   }
 }
 
+///Constant for possible Peripheral Channel
+enum StarPeripheralChannel {
+  No1,
+  No2,
+}
+
+///Converts enum to String
+extension ExtendedStarPeripheralChannel on StarPeripheralChannel {
+  String get text {
+    return this.toString().split('.').last;
+  }
+}
+
 ///Constant for possible QrCodeModel
 enum StarQrCodeModel {
   No1,

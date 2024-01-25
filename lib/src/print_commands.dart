@@ -30,6 +30,11 @@ class PrintCommands {
     this._commands.add({"openCashDrawer": actionNumber});
   }
 
+  /// beep buzzer, [action] needed to based on the printer port
+  startBuzzer(StarPeripheralChannel action) {
+    this._commands.add({"startBuzzer": action});
+  }
+
   /// Prints an image with a url or a file [path].
   /// Set [bothScale] to scale the image by the [width] of receipt.
   /// Sets [absolutePosition] image absolute position.
@@ -50,8 +55,7 @@ class PrintCommands {
     command['bothScale'] = bothScale;
     command['diffusion'] = diffusion;
     command['width'] = width;
-    if (absolutePosition != null)
-      command['absolutePosition'] = absolutePosition;
+    if (absolutePosition != null) command['absolutePosition'] = absolutePosition;
     if (alignment != null) command['alignment'] = alignment.text;
     if (rotation != null) command['rotation'] = rotation.text;
 
@@ -78,8 +82,7 @@ class PrintCommands {
     command['bothScale'] = bothScale;
     command['diffusion'] = diffusion;
     command['width'] = width;
-    if (absolutePosition != null)
-      command['absolutePosition'] = absolutePosition;
+    if (absolutePosition != null) command['absolutePosition'] = absolutePosition;
     if (alignment != null) command['alignment'] = alignment.text;
     if (rotation != null) command['rotation'] = rotation.text;
 
@@ -156,8 +159,7 @@ class PrintCommands {
     command['diffusion'] = diffusion;
     if (fontSize != null) command['fontSize'] = fontSize;
     if (width != null) command['width'] = width;
-    if (absolutePosition != null)
-      command['absolutePosition'] = absolutePosition;
+    if (absolutePosition != null) command['absolutePosition'] = absolutePosition;
     if (alignment != null) command['alignment'] = alignment.text;
     if (rotation != null) command['rotation'] = rotation.text;
 
@@ -188,15 +190,11 @@ class PrintCommands {
     TextDirection textDirection = TextDirection.ltr,
   }) async {
     final RenderRepaintBoundary repaintBoundary = RenderRepaintBoundary();
-    logicalSize ??=
-        View.of(context).physicalSize / View.of(context).devicePixelRatio;
+    logicalSize ??= View.of(context).physicalSize / View.of(context).devicePixelRatio;
     imageSize ??= View.of(context).physicalSize;
     assert(logicalSize.aspectRatio == imageSize.aspectRatio);
     final RenderView renderView = RenderView(
-      view: WidgetsFlutterBinding.ensureInitialized()
-          .platformDispatcher
-          .views
-          .first,
+      view: WidgetsFlutterBinding.ensureInitialized().platformDispatcher.views.first,
       child: RenderPositionedBox(
         alignment: Alignment.center,
         child: repaintBoundary,
@@ -213,8 +211,7 @@ class PrintCommands {
     pipelineOwner.rootNode = renderView;
     renderView.prepareInitialFrame();
 
-    final RenderObjectToWidgetElement<RenderBox> rootElement =
-        RenderObjectToWidgetAdapter<RenderBox>(
+    final RenderObjectToWidgetElement<RenderBox> rootElement = RenderObjectToWidgetAdapter<RenderBox>(
       container: repaintBoundary,
       child: Directionality(
         textDirection: textDirection,
@@ -240,8 +237,7 @@ class PrintCommands {
     final ui.Image image = await repaintBoundary.toImage(
       pixelRatio: imageSize.width / logicalSize.width,
     );
-    final ByteData? byteData =
-        await image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
 
     return byteData?.buffer.asUint8List();
   }

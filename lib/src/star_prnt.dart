@@ -54,6 +54,21 @@ class StarPrnt {
     );
   }
 
+  /// Calls buzzer to the printer. Have to specify [portName] and [emulation]. Returns [PrinterResponseStatus]
+  static Future<PrinterResponseStatus> callBuzzer({
+    required String portName,
+    required String emulation,
+    // required PrintCommands printCommands,
+  }) async {
+    dynamic result = await _channel.invokeMethod('callBuzzer', {
+      'portName': portName,
+      'emulation': emulation,
+    });
+    return PrinterResponseStatus.fromMap(
+      Map<String, dynamic>.from(result),
+    );
+  }
+
   /// sends commands to printer to run
   @Deprecated('Use sendCommands instead.')
   static Future<dynamic> print({
@@ -106,4 +121,17 @@ class StarPrnt {
     });
     return result;
   }
+
+  // static Future<dynamic> startBuzzer({
+  //   required String portName,
+  //   required String emulation,
+  //   // bool hasBarcodeReader = false,
+  // }) async {
+  //   dynamic result = await _channel.invokeMethod('startBuzzer', {
+  //     'portName': portName,
+  //     'emulation': emulation
+  //   });
+  //   return result;
+  // }
+  
 }
