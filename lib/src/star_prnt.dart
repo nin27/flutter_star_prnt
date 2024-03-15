@@ -117,7 +117,8 @@ class StarPrnt {
   }) async {
     dynamic result = await _channel.invokeMethod('executeScan', {
       'portName': portName,
-      'emulation': emulation
+      'emulation': emulation,
+      // 'hasBarcodeReader': hasBarcodeReader
     });
     return result;
   }

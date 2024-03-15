@@ -17,11 +17,13 @@ import com.starmicronics.stario.StarPrinterStatus
 import com.starmicronics.starioextension.ICommandBuilder
 import com.starmicronics.starioextension.ICommandBuilder.*
 import com.starmicronics.starioextension.IConnectionCallback
+import com.starmicronics.starioextension.ConnectionCallback
 import com.starmicronics.starioextension.StarIoExt
 import com.starmicronics.starioextension.StarIoExt.Emulation
 import com.starmicronics.starioextension.StarIoExtManager
 import com.starmicronics.starioextension.StarIoExtManager.*
 import com.starmicronics.starioextension.StarIoExtManagerListener
+import com.starmicronics.stario.StarResultCode
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
@@ -33,10 +35,12 @@ import java.io.IOException
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
 import android.webkit.URLUtil
+import java.lang.Exception
+import java.lang.Thread
 
 /** FlutterStarPrntPlugin */
 public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
-  lateinit var starIoExtManager: StarIoExtManager
+//  lateinit var starIoExtManager: StarIoExtManager
   companion object {
     protected lateinit var applicationContext: Context
 
@@ -193,60 +197,149 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
   public fun executeScan(@NonNull call: MethodCall, @NonNull result: Result){
     val portName: String = call.argument<String>("portName") as String
     val emulation: String = call.argument<String>("emulation") as String
-    val portSettings: String? = getPortSettingsOption(emulation)
 
-        var barcodeString = ""
-    try {
-      // val portSettings = ""
+    println("EXECUTE SCAN CALLED")
 
-      Thread{
-        starIoExtManager = StarIoExtManager(Type.OnlyBarcodeReader, portName, portSettings, 3000, applicationContext)
+//    try {
 
-
-
-
-        if (starIoExtManager != null){
-
-          
-
-          starIoExtManager.setListener(object: StarIoExtManagerListener() {
-                    override fun onBarcodeDataReceive(barcodeData: ByteArray) {
-                        // val barcodeDataArray  = barcodeData.split("\n")
+//      Thread{
+//        var mStarIoExtManager = StarIoExtManager(StarIoExtManager.Type.OnlyBarcodeReader,portName,getPortSettingsOption(emulation),10000,applicationContext)
+//        mStarIoExtManager.setListener(mStarIoExtManagerListener);
+//      }
 
 
-                        // for (codeData in barcodeDataArray){
-                        //   Log.i("FlutterStarPrntBarcode", codeData)
-                        // }
-
-                        barcodeString = barcodeData as String
-                    }
-                })
-
-          // starIoExtManager.connect(object: ConnectionCallback(){
-          //   override fun onConnected(result: Boolean, resultCode: Int) {
-          //               if (!result) {
-          //                   val message = if (resultCode == -100) "バーコードリーダーが使用中になっています。" else "バーコードリーダーを確認できません。"
-          //                   Log.d("ERROR", "バーコード接続エラー: $message")
-          //               }
-          //           }
-
-          //           override fun onDisconnected() {
-          //               Log.d("INFO", "バーコードの接続を解除しました。")
-          //           }
-          // })
-        }
 
 
+    Thread {
+      try {
+        var mStarIoExtManager = StarIoExtManager(StarIoExtManager.Type.OnlyBarcodeReader, portName, getPortSettingsOption(emulation), 10000, applicationContext)
+        mStarIoExtManager.setListener(mStarIoExtManagerListener)
+        mStarIoExtManager.connect(mConnectionCallback) // Explicitly connect
+        println("Barcode reader connected")
+      } catch (e: Exception) {
+        println("Error: ${e.message}")
       }
+    }.start()
+
+//    } catch (e: Exception) {
+//      println(e)
+//    }
 
 
 
-      result.success(barcodeString)
+
+//    Thread{
+////      var mStarIoExtManager = StarIoExtManager(StarIoExtManager.Type.OnlyBarcodeReader,portName,getPortSettingsOption(emulation),10000,applicationContext)
+//      if (mStarIoExtManager?.port != null) {
+//        mStarIoExtManager.disconnect(object : IConnectionCallback {
+//          public override fun onConnected(connectResult: IConnectionCallback.ConnectResult) {
+//            println("ONCONNECTED")
+//          }
+//
+//          public override fun onDisconnected() {
+//            // Do nothing
+//          }
+//        })
+//      }
+//
+//      mStarIoExtManager = StarIoExtManager(StarIoExtManager.Type.OnlyBarcodeReader,portName,getPortSettingsOption(emulation),10000,applicationContext)
+//
+//
+//      if (mStarIoExtManager != null)
+//        mStarIoExtManager.connect(
+//                object : IConnectionCallback {
+//
+//                  public override fun onConnected(connectResult: IConnectionCallback.ConnectResult) {
+//                    if (connectResult == IConnectionCallback.ConnectResult.Success ||
+//                            connectResult == IConnectionCallback.ConnectResult.AlreadyConnected) {
+//                      println("TESTING SUCCESS")
+//                      result.success("Printer Connected")
+//                    } else {
+//                      result.error("CONNECT_ERROR", "Error Connecting to the printer", null)
+//                    }
+//                  }
+//
+//                  public override fun onDisconnected() {
+//                    // Do nothing
+//                  }
+//                })
+//
+//    }
+
+
+
+
+
+  }
+
+
+
+
+  private val mStarIoExtManagerListener: StarIoExtManagerListener = object : StarIoExtManagerListener() {
+
+
+    override fun onBarcodeDataReceive(data: ByteArray) {
+      println("onBarcodeDataReceive CALLED")
+
+      val barcodeDataArray = String(data).split("\n") // Use UTF-8 encoding by default
+
+      barcodeDataArray.forEach { barcodeData ->
+//        addItem(barcodeData)
+        println(barcodeData)
+      }
     }
-    catch(e: Exception) {
-      result.error("SCANNER_ERROR", e.message, null)
+
+    override fun onBarcodeReaderImpossible() {
+      println("Barcode Reader Impossible.")
     }
 
+    override fun onBarcodeReaderConnect() {
+      println("Barcode Reader Connect.")
+    }
+
+    override fun onBarcodeReaderDisconnect() {
+      println("Barcode Reader Disconnect.")
+    }
+
+    override fun onAccessoryConnectSuccess() {
+      println("Accessory Connect Success.")
+    }
+
+    override fun onAccessoryConnectFailure() {
+      println("Accessory Connect Failure.")
+    }
+
+    override fun onAccessoryDisconnect() {
+      println("Accessory Disconnect.")
+    }
+  }
+
+  private val mConnectionCallback: ConnectionCallback = object : ConnectionCallback() {
+    override fun onConnected(result: Boolean, resultCode: Int) {
+      println("CONNECTION CALLBACK")
+//      if (!mIsForeground) {
+//        return
+//      }
+//
+//      if (mProgressDialog != null) {
+//        mProgressDialog.dismiss()
+//      }
+
+//      if (!result) {
+//        val message = if (resultCode == StarResultCode.FAILURE_IN_USE) {
+//          "Check the device. (In use)\nThen touch up the Refresh button."
+//        } else {
+//          "Check the device. (Power and Bluetooth pairing)\nThen touch up the Refresh button."
+//        }
+//
+//        println(message)
+//
+////      }
+    }
+
+    override fun onDisconnected() {
+      // do nothing
+    }
   }
 
   // cant run this on main thread, check this later
@@ -255,54 +348,54 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
     val emulation: String = call.argument<String>("emulation") as String
     val hasBarcodeReader: Boolean? = call.argument<Boolean>("hasBarcodeReader") as Boolean
 
-    val portSettings: String? = getPortSettingsOption(emulation)
-    try {
-      var starIoExtManager = this.starIoExtManager
-
-      Thread{
-      if (starIoExtManager?.port != null) {
-        starIoExtManager.disconnect(object : IConnectionCallback {
-          public override fun onConnected(connectResult: IConnectionCallback.ConnectResult) {
-          }
-
-          public override fun onDisconnected() {
-            // Do nothing
-          }
-        })
-      }
-
-      starIoExtManager =
-          StarIoExtManager(
-              if (hasBarcodeReader != null && hasBarcodeReader)
-                  StarIoExtManager.Type.WithBarcodeReader
-              else StarIoExtManager.Type.Standard,
-              portName,
-              portSettings,
-              10000,
-              applicationContext)
-
-      if (starIoExtManager != null)
-          starIoExtManager.connect(
-              object : IConnectionCallback {
-
-                public override fun onConnected(connectResult: IConnectionCallback.ConnectResult) {
-                  if (connectResult == IConnectionCallback.ConnectResult.Success ||
-                          connectResult == IConnectionCallback.ConnectResult.AlreadyConnected) {
-                    result.success("Printer Connected")
-                  } else {
-                    result.error("CONNECT_ERROR", "Error Connecting to the printer", null)
-                  }
-                }
-
-                public override fun onDisconnected() {
-                  // Do nothing
-                }
-              })
-
-      }
-    } catch (e: Exception) {
-      result.error("CONNECT_ERROR", e.message, e)
-    }
+//    val portSettings: String? = getPortSettingsOption(emulation)
+//    try {
+//      var starIoExtManager = this.starIoExtManager
+//
+//      Thread{
+//      if (starIoExtManager?.port != null) {
+//        starIoExtManager.disconnect(object : IConnectionCallback {
+//          public override fun onConnected(connectResult: IConnectionCallback.ConnectResult) {
+//          }
+//
+//          public override fun onDisconnected() {
+//            // Do nothing
+//          }
+//        })
+//      }
+//
+//      starIoExtManager =
+//          StarIoExtManager(
+//              if (hasBarcodeReader != null && hasBarcodeReader)
+//                  StarIoExtManager.Type.WithBarcodeReader
+//              else StarIoExtManager.Type.Standard,
+//              portName,
+//              portSettings,
+//              10000,
+//              applicationContext)
+//
+//      if (starIoExtManager != null)
+//          starIoExtManager.connect(
+//              object : IConnectionCallback {
+//
+//                public override fun onConnected(connectResult: IConnectionCallback.ConnectResult) {
+//                  if (connectResult == IConnectionCallback.ConnectResult.Success ||
+//                          connectResult == IConnectionCallback.ConnectResult.AlreadyConnected) {
+//                    result.success("Printer Connected")
+//                  } else {
+//                    result.error("CONNECT_ERROR", "Error Connecting to the printer", null)
+//                  }
+//                }
+//
+//                public override fun onDisconnected() {
+//                  // Do nothing
+//                }
+//              })
+//
+//      }
+//    } catch (e: Exception) {
+//      result.error("CONNECT_ERROR", e.message, e)
+//    }
   }
   public fun print(@NonNull call: MethodCall, @NonNull result: Result) {
     val portName: String = call.argument<String>("portName") as String
@@ -393,7 +486,7 @@ public class FlutterStarPrntPlugin : FlutterPlugin, MethodCallHandler {
     when (emulation) {
       "EscPosMobile" -> return "mini"
       "EscPos" -> return "escpos"
-      "StarPRNT", "StarPRNTL" -> return "Portable;l"
+      "StarPRNT", "StarPRNTL" -> return "Portable"
       else -> return emulation
     }
   }
